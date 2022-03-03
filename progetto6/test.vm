@@ -1,0 +1,39 @@
+push constant 2
+call test.sqr 1
+label WHILE
+goto WHILE
+
+function test.mult 2
+push constant 0
+pop local 0
+push argument 1
+pop local 1
+label loop
+push local 1
+push constant 0
+eq
+if-goto end
+push local 0
+push argument 0
+add
+pop local 0
+push local 1
+push constant 1
+sub
+pop local 1
+goto loop
+label end
+push local 0
+return
+
+function test.sqr 0
+push argument 0
+push argument 0
+call test.mult 2
+return
+
+
+
+
+
+

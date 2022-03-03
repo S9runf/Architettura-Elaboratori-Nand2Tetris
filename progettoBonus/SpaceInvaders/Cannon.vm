@@ -1,0 +1,317 @@
+function Cannon.new 0
+//alloca memoria per informazioni sul cannone
+push constant 5
+call Memory.alloc 1
+pop pointer 0
+//lato sinistro
+push argument 0
+pop this 0
+//base superiore
+push argument 1
+pop this 1
+//lato destro
+push argument 2
+pop this 2
+//base inferiore
+push argument 3
+pop this 3
+//centro del cannone
+push this 2
+push constant 2
+call Math.divide 2
+push this 0
+add
+pop this 4
+push pointer 0
+//disegna base cannone
+call Cannon.show 1
+pop temp 0
+//disegna canna
+push this 4
+push constant 2
+sub 
+push this 1
+push constant 3
+sub
+push this 4 
+push constant 2
+add
+push this 1
+call Screen.drawRectangle 4
+pop temp 0 
+//restituisce pointer a cannone
+push pointer 0
+return
+
+function Cannon.dispose 0
+push argument 0
+pop pointer 0
+push pointer 0
+call Memory.deAlloc 1
+pop temp 0
+push constant 0
+return
+
+function Cannon.show 0
+push argument 0
+pop pointer 0
+push constant 0
+not
+call Screen.setColor 1
+pop temp 0
+push pointer 0
+call Cannon.draw 1
+pop temp 0
+push constant 0
+return
+
+function Cannon.draw 0
+push argument 0
+pop pointer 0
+push this 0
+push this 1
+push this 0
+push this 2
+add
+push this 1
+push this 3
+add
+call Screen.drawRectangle 4
+pop temp 0
+push constant 0
+return
+
+function Cannon.move 0
+//argomenti: pointer cannone, tasto premuto
+push argument 0
+pop pointer 0
+//cancella cannone
+push constant 0
+call Screen.setColor 1
+pop temp 0
+push this 0
+push this 1
+push constant 3
+sub
+push this 2
+push this 0
+add 
+push this 3
+push this 1
+add 
+call Screen.drawRectangle 4
+pop temp 0
+push constant 0
+not 
+call Screen.setColor 1
+pop temp 0
+//controlla direzione
+//se tasto premuto = freccia sinistra
+//muovi cannone a sinistra
+push argument 1
+push constant 130
+eq
+if-goto LEFT
+//altrimenti muovi cannone a destra
+//sposta centro cannone
+push this 4
+push constant 4
+add 
+pop this 4
+//sposta lato sinistro
+push this 0
+push constant 4
+add
+pop this 0
+//se lato sinistro < lunghezza schermo - lunghezza cannone
+//disegna cannone
+push this 0
+push constant 511
+push this 2
+sub
+lt
+if-goto TRUE_0
+//altrimenti lato sinistro = lunghezza schermo - lunghezza cannone
+push constant 511
+push this 2
+sub
+pop this 0
+//centro cannone = lato sinistro + lunghezza cannone / 2  
+push this 2
+push constant 2
+call Math.divide 2
+push this 0
+add
+pop this 4
+label TRUE_0
+//disegna cannone con posizioni aggiornate
+push this 0
+push this 1
+push this 0
+push this 2
+add
+push this 3
+push this 1 
+add
+call Screen.drawRectangle 4
+pop temp 0
+goto END0
+label LEFT
+//sposta centro cannone
+push this 4
+push constant 4
+sub
+pop this 4
+//sposta lato sinistro
+push this 0
+push constant 4
+sub
+pop this 0
+//se lato sinistro > estremo sinistro schermo
+//disegna cannone
+push this 0
+push constant 0
+gt
+if-goto TRUE_1
+//altrimenti lato sinistro = 0
+push constant 0
+pop this 0
+//centro = lunghezza cannone / 2
+push this 2
+push constant 2
+call Math.divide 2
+pop this 4
+label TRUE_1
+//ridisegna cannone con nuove posizioni
+push this 0
+push this 1
+push this 0
+push this 2
+add
+push this 3
+push this 1
+add
+call Screen.drawRectangle 4
+pop temp 0
+label END0
+//ridisegna canna con nuova posizione
+push this 4
+push constant 2
+sub 
+push this 1
+push constant 3
+sub
+push this 4 
+push constant 2
+add
+push this 1
+call Screen.drawRectangle 4
+pop temp 0 
+return
+
+function Cannon.shoot 1
+//argomento: pointer cannone
+push argument 0
+pop pointer 0
+//salva punto centrale in local 0
+push this 4
+pop local 0
+//alloca memoria per punto più alto del proiettile
+push constant 1
+call Memory.alloc 1
+pop pointer 1
+//salva punto più alto 
+push this 1
+push constant 13
+sub
+pop that 0
+//disegna proiettile
+push local 0
+push that 0
+push constant 3
+sub
+push local 0
+push that 0
+push constant 10
+add
+call Screen.drawLine 4
+pop temp 0
+//restituisci pointer a proiettile
+push pointer 1
+return
+
+function Cannon.moveShot 1
+//argomenti:pointer cannone, pointer proiettile
+push argument 0
+pop pointer 0
+//salva centro cannone
+push this 4
+pop local 0
+push argument 1
+pop pointer 1
+//cancella proiettile
+push constant 0
+call Screen.setColor 1
+pop temp 0
+push local 0
+push that 0
+push local 0
+push that 0
+push constant 10
+add
+call Screen.drawLine 4
+pop temp 0
+push constant 0
+not 
+call Screen.setColor 1
+pop temp 0
+//sposta proiettile
+push that 0
+push constant 10 
+sub
+pop that 0
+//se non ha raggiunto il punto più in alto dello schermo, continua a muoversi
+push that 0
+push constant 0
+gt
+if-goto CONTINUE
+//altrimenti cancella il proiettile
+push pointer 1
+call Memory.deAlloc 1
+//restituisce 0
+push constant 0
+goto END1
+label CONTINUE
+//ridisegna proiettile nella nuova posizione
+push local 0
+push that 0
+push local 0
+push that 0
+push constant 10 
+add
+call Screen.drawLine 4
+pop temp 0
+//restituisce pointer a proiettile
+push argument 1
+label END1
+return
+
+function Cannon.shotDispose 0
+//argomenti: pointer proiettile, centro cannone, cima proiettile
+//cancella proiettile
+push constant 0
+call Screen.setColor 1
+pop temp 0
+push argument 1
+push argument 2 
+push argument 1
+push argument 2
+push constant 10
+add
+call Screen.drawLine 4
+pop temp 0
+//dealloca memoria proiettile
+push argument 0
+call Memory.deAlloc 1
+pop temp 0
+return

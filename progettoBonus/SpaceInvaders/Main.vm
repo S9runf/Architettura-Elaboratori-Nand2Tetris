@@ -1,0 +1,13 @@
+function Main.main 1
+call SpaceInvaders.newInstance 0
+pop temp 0
+call SpaceInvaders.getInstance 0
+pop local 0
+push local 0
+call SpaceInvaders.run 1
+pop temp 0
+push local 0
+call SpaceInvaders.dispose 1
+pop temp 0
+push constant 0
+return

@@ -1,0 +1,442 @@
+//mostra elementi del gioco a schermo
+function SpaceInvaders.new 0
+push constant 7
+call Memory.alloc 1
+pop pointer 0
+call Screen.clearScreen 0
+pop temp 0
+push constant 30
+pop this 6
+push constant 230
+push constant 229
+push this 6
+push constant 7
+call Cannon.new 4
+pop this 0
+push constant 238
+push constant 511
+push constant 240
+call Screen.drawRectangle 4
+pop temp 0
+push constant 22
+push constant 0
+call Output.moveCursor 2
+pop temp 0
+push constant 8
+call String.new 1
+push constant 83
+call String.appendChar 2
+push constant 99
+call String.appendChar 2
+push constant 111
+call String.appendChar 2
+push constant 114
+call String.appendChar 2
+push constant 101
+call String.appendChar 2
+push constant 58
+call String.appendChar 2
+push constant 32
+call String.appendChar 2
+push constant 48
+call String.appendChar 2
+call Output.printString 1
+pop temp 0
+push constant 0
+pop this 3
+push constant 0
+pop this 4
+push constant 0
+pop this 2
+push constant 0
+pop this 5
+//restituisce pointer contenente pointer a cannone in posizione 0
+push pointer 0
+return
+
+//rimuove elementi del gioco dalla memoria
+function SpaceInvaders.dispose 0
+push argument 0
+pop pointer 0
+push this 0
+call Cannon.dispose 1
+pop temp 0
+push pointer 0
+call Memory.deAlloc 1
+pop temp 0
+push constant 0
+return
+
+//salva indirizzo della memoria allocata da new  in static 0
+function SpaceInvaders.newInstance 0
+call SpaceInvaders.new 0
+pop static 0
+push constant 0
+return
+
+//restituisce indirizzo salvato da newInstance
+function SpaceInvaders.getInstance 0
+push static 0
+return
+
+//fa funzionare il gioco
+//cicla finché il gioco non finisce
+function SpaceInvaders.run 2
+//argomento: indirizzo salvato da newInstance
+//informazioni sulla posizione del cannone
+push argument 0
+pop pointer 0
+//pointer cannone salvato in local 0
+push this 0
+pop local 0
+//counter punteggio in local 1
+push constant 0
+pop local 1
+// crea nova linea di alieni
+label NEW_LINE
+//crea spazio per nuova linea
+push static 1
+push static 2
+push static 3 
+push static 4
+push static 5
+pop static 6
+pop static 5
+pop static 4
+pop static 3
+pop static 2
+call Aliens.new 0
+//salva indirizzo linea in static 1
+pop static 1
+label WHILE_0
+//rallenta movimento alieni
+push constant 10000
+pop temp 1
+label WAIT
+//controlla tasto premuto
+call Keyboard.keyPressed 0
+pop temp 0
+//freccia destra o sinistra = muovi cannone
+push temp 0
+push constant 130
+eq
+push temp 0
+push constant 132
+eq
+or
+if-goto MOVE
+//freccia in alto = spara
+push temp 0
+push constant 131
+eq 
+if-goto SHOOT
+//ESC = termina gioco
+push temp 0
+push constant 140
+eq 
+if-goto GAME_OVER
+goto CONTINUE
+//spara
+label SHOOT
+push local 0
+call Cannon.shoot 1
+//salva pointer a proiettile
+pop temp 2
+//movimento proiettile
+label LOOP
+push local 0
+push temp 2
+call Cannon.moveShot 2
+pop pointer 1
+//se il risultato è 0 esci dal loop
+push pointer 1
+push constant 0
+eq
+if-goto CONTINUE
+//altrimenti salva punto più in alto del proiettile
+push that 0
+pop temp 4
+//controlla altezza proiettile rispetto a file di alieni
+//controlla dalla fila più bassa alla più alta
+push static 1
+push static 2
+push static 3
+push static 4
+push static 5
+push static 6
+label CHECK_HEIGHT
+pop pointer 1
+//se la fila è vuota controlla la prossima
+push pointer 1
+push constant 0
+eq 
+if-goto CHECK_HEIGHT
+//altrimenti se il proiettile è più in basso della fila più bassa
+//fai muovere ancora il proiettile
+push temp 4
+push that 11
+gt
+if-goto LOOP
+//altrimenti se il punto più in basso del proiettile è più basso del lato più alto della linea
+//controlla collisione
+push temp 4
+push constant 10 
+add
+push that 11 
+push constant 10
+sub
+gt
+if-goto COLLISION
+//altrimenti se ha superato la linea e questa non è quella più in alto
+//controlla la prossima linea
+push temp 4
+push constant 10
+gt 
+if-goto CHECK_HEIGHT
+//altrimenti fai muovere ancora il proiettile
+goto LOOP
+label COLLISION
+//controlla posizione del proiettile rispetto a tutti gli alieni della fila
+//da sinistra a destra
+push that 10
+push that 9
+push that 8
+push that 7
+push that 6
+push that 5
+push that 4
+push that 3
+push that 2
+push that 1
+push that 0
+//counter alieni controllati
+push constant 11
+pop temp 3
+//salva altezza linea
+push that 11
+pop temp 5
+label CHECK_COLLISION
+pop pointer 0
+push local 0
+pop pointer 1
+//se il proiettile è più a sinistra dell'alieno
+//allora fai muovere ancora il proiettile (nessuna collisione con questa riga)
+push that 4 
+push this 0
+push constant 10
+sub
+lt
+if-goto LOOP
+//altrienti se il proiettile è più a sinistra dell'estremo destro dell'alieno
+//distruggi l'alieno
+push that 4
+push this 0
+lt
+if-goto DESTROY
+//altrimenti abbassa counter alieni controllati
+push temp 3
+push constant 1
+sub 
+//se non sono stati controllati tutti gli alieni della riga
+//controlla il prossimo
+pop temp 3
+push temp 3
+push constant 0
+gt
+if-goto CHECK_COLLISION
+//altrimenti fai muovere ancora il proiettile
+goto LOOP
+label DESTROY
+//distruggi alieno
+push temp 5
+call Aliens.destroy 1
+//elimina proiettile
+push temp 2
+push that 4
+push temp 4
+call Cannon.shotDispose 3
+//aumenta punteggio
+push local 1
+push constant 1
+add
+pop local 1
+push constant 22
+push constant 7
+call Output.moveCursor 2
+pop temp 0
+push local 1
+call Output.printInt 1
+pop temp 0
+//fine sparo
+goto CONTINUE
+
+label MOVE
+//movimento cannone
+push local 0
+push temp 0
+call Cannon.move 2
+pop temp 0
+label CONTINUE
+//diminuisce counter attesa
+push temp 1
+push constant 1
+sub
+pop temp 1
+//se counter > 0 continua ad aspettare
+push temp 1
+push constant 0
+gt 
+if-goto WAIT
+//altrienti prosegui
+//controlla linee
+//se linea 6 è vuota vai alla prossima
+push static 6
+push constant 0
+eq 
+if-goto NEXT_1
+//altrimenti fai muovere linea
+push static 6
+call Aliens.move 1
+pop temp 1
+//se risultato = 1 (nuova linea) per linea 6
+//GAME OVER
+push temp 1
+push constant 1
+eq
+if-goto GAME_OVER
+//altrimenti se risultato = 0
+//muovi la prossima linea
+push temp 1 
+push constant 0
+eq
+if-goto NEXT_1
+//altrimenti risultato = 2, la linea è vuota
+//dealloca memoria e metti static a 0
+push static 6 
+call Memory.deAlloc 1
+pop temp 0
+push constant 0
+pop static 6
+label NEXT_1
+push static 5
+push constant 0
+eq 
+if-goto NEXT_2
+push static 5
+call Aliens.move 1
+pop temp 0
+push temp 0
+push constant 2
+eq 
+not 
+if-goto NEXT_2
+push static 5
+call Memory.deAlloc 1
+pop temp 0
+push constant 0
+pop static 5
+label NEXT_2
+push static 4
+push constant 0
+eq 
+if-goto NEXT_3
+push static 4
+call Aliens.move 1
+pop temp 0
+push temp 0
+push constant 2
+eq 
+not 
+if-goto NEXT_3
+push static 4 
+call Memory.deAlloc 1
+pop temp 0
+push constant 0
+pop static 4
+label NEXT_3
+push static 3
+push constant 0
+eq 
+if-goto NEXT_4
+push static 3
+call Aliens.move 1
+pop temp 0
+push temp 0
+push constant 2
+eq 
+not 
+if-goto NEXT_4
+push static 3 
+call Memory.deAlloc 1
+pop temp 0
+push constant 0
+pop static 3
+label NEXT_4
+push static 2
+push constant 0
+eq 
+if-goto NEXT_5
+push static 2
+call Aliens.move 1
+pop temp 0
+push temp 0
+push constant 2
+eq 
+not 
+if-goto NEXT_5
+push static 2 
+call Memory.deAlloc 1
+pop temp 0
+push constant 0
+pop static 2
+label NEXT_5
+push static 1
+push constant 0
+eq 
+if-goto NEW_LINE
+push static 1
+call Aliens.move 1
+pop temp 0
+push temp 0
+push constant 1
+eq
+if-goto NEW_LINE
+push temp 0
+push constant 2
+eq 
+not
+if-goto WHILE_0
+push static 1
+call Memory.deAlloc 1
+pop temp 0
+push constant 0
+pop static 1
+goto NEW_LINE
+label GAME_OVER
+push constant 10
+push constant 26
+call Output.moveCursor 2
+pop temp 0
+push constant 9
+call String.new 1
+push constant 71
+call String.appendChar 2
+push constant 97
+call String.appendChar 2
+push constant 109
+call String.appendChar 2
+push constant 101
+call String.appendChar 2
+push constant 32
+call String.appendChar 2
+push constant 79
+call String.appendChar 2
+push constant 118
+call String.appendChar 2
+push constant 101
+call String.appendChar 2
+push constant 114
+call String.appendChar 2
+call Output.printString 1
+pop temp 0
+return

@@ -1,0 +1,328 @@
+function Aliens.new 1
+//alloca memoria per informazioni sulla linea di alieni
+push constant 13
+call Memory.alloc 1 
+pop pointer 0
+//lato sinistro del primo alieno
+push constant 100 
+pop local 0
+label WHILE
+//alloca memoria per singoli alieni
+push constant 1
+call Memory.alloc 1
+pop pointer 1
+push constant 0
+not 
+call Screen.setColor 1
+pop temp 0
+//salva lato destro alieno 
+push local 0
+push constant 10
+add
+pop that 0
+//salva altezza della base della linea
+push constant 20
+pop this 11
+//disegna alieno
+push local 0
+push constant 10
+push that 0
+push this 11
+call Screen.drawRectangle 4
+pop temp 0
+//metti l'indirizzo di memoria dell'alieno creato nello stack
+push pointer 1
+//lato sinistro prossimo alieno
+push constant 20
+push that 0
+add
+pop local 0
+//cicla fino alla fine della linea
+push local 0 
+push constant 400
+gt
+not 
+if-goto WHILE
+//salva indirizzi di memoria degli alieni creati
+pop this 10
+pop this 9
+pop this 8
+pop this 7
+pop this 6
+pop this 5
+pop this 4
+pop this 3
+pop this 2
+pop this 1
+pop this 0
+//salva estremo destro della linea
+push this 10
+pop pointer 1
+push that 0
+pop this 12
+//restituisci indirizzo della linea
+push pointer 0
+return
+
+function Aliens.draw 0
+//argomento: pointer linea
+push argument 0
+pop pointer 0
+//disegna alieni
+push constant 0
+not 
+call Screen.setColor 1
+pop temp 0
+push this 10
+push this 9
+push this 8
+push this 7
+push this 6
+push this 5
+push this 4
+push this 3
+push this 2
+push this 1
+push this 0
+//counter alieni disegnati
+push constant 11
+pop temp 1
+label WHILE_1
+pop pointer 1
+//diminuisci counter
+push temp 1
+push constant 1
+sub
+pop temp 1
+//se alieno è stato distrutto saltalo 
+push that 0
+push constant 0
+eq
+if-goto SKIP
+//altrimenti disegnalo
+push that 0
+push constant 10
+sub
+push this 11
+push constant 10
+sub
+push that 0
+push this 11
+call Screen.drawRectangle 4
+pop temp 0
+label SKIP
+//se counter > 0 controlla il prossimo alieno
+push temp 1
+push constant 0
+gt
+if-goto WHILE_1
+//altrimenti esci dal loop
+return
+
+function Aliens.move 0
+//argomento: pointer linea da muovere
+push argument 0
+pop pointer 0
+//cancella linea
+push constant 0
+call Screen.setColor 1
+pop temp 0
+push constant 100
+push this 11
+push constant 10
+sub
+push constant 511
+push this 11
+call Screen.drawRectangle 4
+pop temp 0
+push constant 0
+not 
+call Screen.setColor 1
+pop temp 0
+//aumenta estremo destro linea
+push this 12
+push constant 30
+add
+pop this 12
+//se estremo destro > estremo destro schermo
+//vai alla prossima linea
+push this 12
+push constant 511
+gt
+if-goto NEXT_LINE
+//altrimenti controlla alieni
+push this 0
+push this 1
+push this 2
+push this 3
+push this 4
+push this 5
+push this 6
+push this 7
+push this 8
+push this 9
+push this 10
+//counter alieni controllati
+push constant 11
+pop temp 0
+//counter alieni distrutti
+push constant 0
+pop temp 1
+label LOOP_0
+pop pointer 1
+//diminuisce counter 
+push temp 0
+push constant 1
+sub
+pop temp 0
+//se l'alieno non è stato distrutto
+//aumenta estremo destro alieno
+push that 0
+push constant 0
+gt
+if-goto ADD
+//altrimenti aumenta counter alieni distrutti
+push constant 1
+push temp 1
+add 
+pop temp 1
+//se alieni distrutti < 11
+//continua a spostare linea
+push temp 1
+push constant 11 
+lt
+if-goto CONTINUE_0
+//altrimenti restituisci 2 (linea vuota)
+push constant 2
+goto END
+label CONTINUE_0
+//se counter alieni controllati > 0 
+//controlla il prossimo
+push temp 0
+push constant 0 
+gt
+if-goto LOOP_0
+//altrimenti esci dal loop
+goto LOOP_END0
+label ADD
+//aumenta estremo destro
+push that 0
+push constant 30
+add
+pop that 0
+//se counter alieni > 0 controlla il prossimo
+push temp 0
+push constant 0
+gt
+if-goto LOOP_0
+//altrimenti esci dal loop
+label LOOP_END0
+//ridisegna linea 
+push pointer 0
+call Aliens.draw 1
+//restituisci 0
+push constant 0
+goto END
+label NEXT_LINE
+//rimetti estremo destro linea a valore iniziale
+push constant 410
+pop this 12
+push this 10
+push this 9
+push this 8
+push this 7
+push this 6
+push this 5
+push this 4
+push this 3
+push this 2
+push this 1
+push this 0
+//valori da ripristinare
+push constant 80
+pop temp 0
+//counter alieni distrutti
+push constant 0
+pop temp 1
+label LOOP_1
+pop pointer 1
+//aumenta valore da ripristinare
+push temp 0
+push constant 30 
+add 
+pop temp 0
+//se alieno non è stato distrutto
+//ripristina estremo destro a valore iniziale
+push that 0
+push constant 0
+gt
+if-goto RESET
+//altrimenti aumenta counter alieni distrutti
+push constant 1
+push temp 1 
+add 
+pop temp 1
+//se counter < 11 continua
+push temp 1
+push constant 11 
+lt
+if-goto CONTINUE_1
+//altrimenti restituisci 2 (linea vuota)
+push constant 2
+goto END
+label CONTINUE_1
+//se valore da ripristinare < 410 (valore alieno destro)
+//controlla il prossimo alieno
+push temp 0
+push constant 410
+lt
+if-goto LOOP_1
+//altrimenti esci dal loop
+goto LOOP_END1
+label RESET
+//estremo destro alieno = valore da ripristinare
+push temp 0
+pop that 0
+//se valore da ripristinare < 410 (valore alieno destro)
+push temp 0
+push constant 410
+lt
+if-goto LOOP_1
+//altrimenti esci dal loop
+label LOOP_END1
+//aumenta altezza linea
+push this 11
+push constant 30
+add
+pop this 11
+//ridisegna linea
+push pointer 0
+call Aliens.draw 1
+//restituisce 1 (nuova linea)
+push constant 1
+label END
+return
+
+function Aliens.destroy 0
+//argomento: altezza linea
+//cancella alieno
+push constant 0
+call Screen.setColor 1
+pop temp 0
+push this 0
+push constant 10
+sub
+push argument 0
+push constant 10
+sub
+push this 0
+push argument 0
+call Screen.drawRectangle 4
+pop temp 0
+//metti a 0 informazoni su alieno cancellato
+push constant 0
+pop this 0
+return
+
+
+
